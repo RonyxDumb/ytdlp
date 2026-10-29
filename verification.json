@@ -1,0 +1,163 @@
+{
+  "checked_at": "2026-10-29T18:33:57.747665+00:00",
+  "yt_dlp_version": "2025.11.12",
+  "platform": "Linux JVM + identical bundled yt-dlp, not an Android device",
+  "full_downloads": false,
+  "videos": [
+    {
+      "watch_url": "https://streamingcommunityz.day/it/watch/2305",
+      "title": "Hubie Halloween",
+      "resolver_ok": true,
+      "selected_format": "2150+audio-Italian",
+      "tracks": [
+        {
+          "format_id": "2150",
+          "height": 720,
+          "language": null,
+          "manifest_status": 200,
+          "encryption": [
+            {
+              "method": "AES-128",
+              "key_status": 200,
+              "key_bytes_read": 16
+            }
+          ],
+          "first_segment": {
+            "http_status": 206,
+            "bytes_read": 1024,
+            "content_type": "text/html",
+            "content_range": "bytes 0-1023/121088",
+            "validated_container": "MPEG-TS"
+          }
+        },
+        {
+          "format_id": "audio-Italian",
+          "height": null,
+          "language": "ita",
+          "manifest_status": 200,
+          "encryption": [
+            {
+              "method": "AES-128",
+              "key_status": 200,
+              "key_bytes_read": 16
+            }
+          ],
+          "first_segment": {
+            "http_status": 206,
+            "bytes_read": 1024,
+            "content_type": "text/html",
+            "content_range": "bytes 0-1023/77840",
+            "validated_container": "MPEG-TS"
+          }
+        }
+      ],
+      "ok": true
+    },
+    {
+      "watch_url": "https://streamingcommunityz.day/it/watch/778",
+      "title": "Cars - Motori ruggenti",
+      "resolver_ok": true,
+      "selected_format": "2150+audio-Italian",
+      "tracks": [
+        {
+          "format_id": "2150",
+          "height": 720,
+          "language": null,
+          "manifest_status": 200,
+          "encryption": [
+            {
+              "method": "AES-128",
+              "key_status": 200,
+              "key_bytes_read": 16
+            }
+          ],
+          "first_segment": {
+            "http_status": 206,
+            "bytes_read": 1024,
+            "content_type": "text/html",
+            "content_range": "bytes 0-1023/191584",
+            "validated_container": "MPEG-TS"
+          }
+        },
+        {
+          "format_id": "audio-Italian",
+          "height": null,
+          "language": "ita",
+          "manifest_status": 200,
+          "encryption": [
+            {
+              "method": "AES-128",
+              "key_status": 200,
+              "key_bytes_read": 16
+            }
+          ],
+          "first_segment": {
+            "http_status": 206,
+            "bytes_read": 1024,
+            "content_type": "text/html",
+            "content_range": "bytes 0-1023/97776",
+            "validated_container": "MPEG-TS"
+          }
+        }
+      ],
+      "ok": true
+    },
+    {
+      "watch_url": "https://streamingcommunityz.day/it/watch/1979",
+      "title": "Un weekend da bamboccioni",
+      "resolver_ok": true,
+      "selected_format": "2150+audio-Italian",
+      "tracks": [
+        {
+          "format_id": "2150",
+          "height": 720,
+          "language": null,
+          "manifest_status": 200,
+          "encryption": [
+            {
+              "method": "AES-128",
+              "key_status": 200,
+              "key_bytes_read": 16
+            }
+          ],
+          "first_segment": {
+            "http_status": 206,
+            "bytes_read": 1024,
+            "content_type": "text/html",
+            "content_range": "bytes 0-1023/173344",
+            "validated_container": "MPEG-TS"
+          }
+        },
+        {
+          "format_id": "audio-Italian",
+          "height": null,
+          "language": "ita",
+          "manifest_status": 200,
+          "encryption": [
+            {
+              "method": "AES-128",
+              "key_status": 200,
+              "key_bytes_read": 16
+            }
+          ],
+          "first_segment": {
+            "http_status": 206,
+            "bytes_read": 1024,
+            "content_type": "text/html",
+            "content_range": "bytes 0-1023/65056",
+            "validated_container": "MPEG-TS"
+          }
+        }
+      ],
+      "ok": true
+    }
+  ],
+  "app_version": "1.2",
+  "version_code": 3,
+  "unit_tests": {
+    "tests": 10,
+    "failures": 0,
+    "errors": 0
+  },
+  "apk_sha256": "c64e821a65a31ad8f2dea0795808ed2e65d0f5e43cc67271b55b17d8578ef2df"
+}
