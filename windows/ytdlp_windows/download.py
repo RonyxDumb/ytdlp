@@ -148,3 +148,6 @@ class DownloadJob:
             if self.process is not None and self.process.poll() is None:
                 self._stop(self.process)
             self.emit("error", {"text": str(error)})
+        finally:
+            if self.process is not None and self.process.stdout is not None:
+                self.process.stdout.close()

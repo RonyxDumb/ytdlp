@@ -110,6 +110,8 @@ class RuntimeManager:
                 "repository": repository, "release": release["tag_name"],
                 "sha256": asset.sha256, "source": release["html_url"],
             }, indent=2), "utf-8")
+            if final.exists() and not (final / executable).is_file():
+                shutil.rmtree(final)
             if not final.exists():
                 payload.replace(final)
         check_cancel(cancel)

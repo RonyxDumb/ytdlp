@@ -171,7 +171,7 @@ class DownloadTests(unittest.TestCase):
         url = "https://example.com/v?x=$(touch+bad)&y=1"
         command = build_command(tools, Resolved(url), Path("C:/Users/A & B/Download"))
         self.assertEqual(command[-2:], ["--", url])
-        self.assertIn("C:/Users/A & B/Download", command)
+        self.assertIn(str(Path("C:/Users/A & B/Download")), command)
         self.assertIn("--ignore-config", command)
 
     def test_remote_title_is_not_interpreted_as_format_string(self):
@@ -272,6 +272,7 @@ class WindowsTests(unittest.TestCase):
                 stop_process(process)
             if handle:
                 kernel.CloseHandle(handle)
+            process.stdout.close()
 
 
 if __name__ == "__main__":

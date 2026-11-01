@@ -70,9 +70,10 @@ def extract_application(archive: Path, destination: Path) -> Path:
         with package.open(members[0]) as source, target.open("wb") as output:
             shutil.copyfileobj(source, output)
     with target.open("rb") as executable:
-        if executable.read(2) != b"MZ":
-            target.unlink()
-            raise GitHubError("Il pacchetto non contiene un eseguibile Windows.")
+        is_executable = executable.read(2) == b"MZ"
+    if not is_executable:
+        target.unlink()
+        raise GitHubError("Il pacchetto non contiene un eseguibile Windows.")
     return target
 
 
