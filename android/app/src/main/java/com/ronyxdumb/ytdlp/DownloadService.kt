@@ -48,6 +48,15 @@ class DownloadService : Service() {
         }
         if (DownloadState.busy) return START_NOT_STICKY
         val url = intent?.getStringExtra("url") ?: return START_NOT_STICKY
+        val format = try {
+            DownloadFormat.fromId(intent.getStringExtra(DownloadFormat.EXTRA) ?: DownloadFormat.MP4.id)
+        } catch (e: IllegalArgumentException) {
+            DownloadState.message = e.message ?: "Formato non valido"
+            startForeground(1, notification(DownloadState.message))
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
         DownloadState.busy = true; DownloadState.cancelled = false; DownloadState.progress = 0
         startForeground(1, notification("Preparazione…"))
         wakeLock = (getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "YtDlp:download").apply { acquire(6 * 60 * 60 * 1000L) }
@@ -74,24 +83,30 @@ class DownloadService : Service() {
                 request.addOption("--restrict-filenames")
                 request.addOption("--trim-filenames", "160")
                 request.addOption("--socket-timeout", "30")
-                request.addOption("-f", (if (resolved != null && java.net.URI(resolved.url).rawQuery.contains("lang=it")) "bv[vcodec^=avc1]+ba[format_id=audio-Italian]/" else "") + "bv[vcodec^=avc1]+ba[acodec^=mp4a]/b[vcodec^=avc1][acodec^=mp4a]/bv*[ext=mp4]+ba[ext=m4a]/bv*[ext=mp4]+ba[ext=mp4]/b[ext=mp4]/bv*+ba/b")
-                request.addOption("--merge-output-format", "mp4")
+                val italian = resolved != null && android.net.Uri.parse(resolved.url).getQueryParameter("lang") == "it"
+                for ((option, value) in format.options(italian)) {
+                    if (value == null) request.addOption(option) else request.addOption(option, value)
+                }
                 val template = if (resolved != null) {
                     val safeTitle = resolved.title.replace(Regex("[^\\p{L}\\p{N} ._-]"), "_").take(120).ifBlank { "Video" }.replace("%", "_")
                     "${directory.absolutePath}/$safeTitle.%(ext)s"
                 } else "${directory.absolutePath}/%(title).120s [%(id)s].%(ext)s"
                 request.addOption("-o", template)
-                report("Download in corso…")
-                YoutubeDL.getInstance().execute(request, processId) { percent, eta, _ ->
-                    report("Download ${percent.toInt()}% · ${eta}s rimanenti", percent.toInt().coerceIn(0, 100))
+                report("Download · ${format.label}…")
+                YoutubeDL.getInstance().execute(request, processId) { percent, eta, line ->
+                    val outputLine = line.orEmpty()
+                    val finalizing = outputLine.startsWith("[ExtractAudio]") || outputLine.startsWith("[VideoConvertor]") ||
+                        outputLine.startsWith("[VideoRemuxer]") || outputLine.startsWith("[Merger]") || percent >= 100
+                    if (finalizing) report("Conversione e finalizzazione · ${format.label}…", 100)
+                    else report("Download ${percent.toInt()}% · ${eta}s rimanenti", percent.toInt().coerceIn(0, 100))
                 }
                 if (DownloadState.cancelled) throw InterruptedException()
-                val files = directory.listFiles()?.filter { it.isFile && it.extension !in listOf("part", "ytdl", "temp") } ?: emptyList()
-                check(files.isNotEmpty()) { "Nessun video prodotto dal sito." }
+                val files = directory.listFiles()?.filter { it.isFile && format.accepts(it.extension) } ?: emptyList()
+                check(files.size == 1) { "Nessun file finale valido nel formato ${format.label}." }
                 report("Salvataggio in Download/YtDlp…", 100)
                 for (file in files) {
                     if (DownloadState.cancelled) throw InterruptedException()
-                    val mime = when(file.extension.lowercase()) { "mp4" -> "video/mp4"; "webm" -> "video/webm"; "mkv" -> "video/x-matroska"; else -> "application/octet-stream" }
+                    val mime = DownloadFormat.mimeFor(file.extension)
                     val values = ContentValues().apply {
                         put(MediaStore.Downloads.DISPLAY_NAME, file.name)
                         put(MediaStore.Downloads.MIME_TYPE, mime)
@@ -112,7 +127,7 @@ class DownloadService : Service() {
                         contentResolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
                     } catch (e: Exception) { contentResolver.delete(uri, null, null); throw e }
                 }
-                DownloadState.message = "✓ Salvato in Download/YtDlp/"
+                DownloadState.message = "✓ ${format.label} salvato in Download/YtDlp/"
                 DownloadState.progress = 100
             } catch (e: Exception) {
                 DownloadState.message = if (DownloadState.cancelled) "Download annullato" else "Errore: ${e.message?.replace(Regex("https?://[^\\s]+"), "[indirizzo video]")?.takeLast(1500) ?: "download non riuscito"}"

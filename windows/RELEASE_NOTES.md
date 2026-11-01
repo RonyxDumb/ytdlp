@@ -1,4 +1,11 @@
-YtDlp Windows 1.0.1.
+YtDlp Windows 1.1.0.
+
+- Menu formato: MP4, MKV, WebM, video automatico, MP3, WAV, M4A, FLAC, Opus e OGG Vorbis.
+- Estrazione solo audio e conversione con FFmpeg quando necessaria.
+- Ultimo formato ricordato e pulsante Scarica audio / Scarica video coerente con la scelta.
+- Nomi e temporanei distinti per formato: audio e video dello stesso link possono coesistere.
+- Verifica del formato finale prima di dichiarare il download completato.
+- Prove reali dei formati, dei codec e della conservazione dei file precedenti.
 
 - Allineati gli aggiornamenti al repository pubblico `RonyxDumb/ytdlp`: non è necessario un token.
 

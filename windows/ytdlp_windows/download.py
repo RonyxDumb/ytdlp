@@ -7,7 +7,9 @@ import subprocess
 import threading
 from collections import deque
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
+from .formats import DEFAULT_FORMAT, get_format
 from .github import Cancelled, check_cancel
 from .resolver import Resolved, Resolver, USER_AGENT, validate_url
 from .runtime import Emit, RuntimeManager, Tools
@@ -17,8 +19,10 @@ POSTPROCESS = "__YTDLP_POSTPROCESS__"
 FILE = "__YTDLP_FILE__"
 
 
-def build_command(tools: Tools, resolved: Resolved, destination: Path) -> list[str]:
+def build_command(tools: Tools, resolved: Resolved, destination: Path,
+                  format_id: str = DEFAULT_FORMAT) -> list[str]:
     validate_url(resolved.url)
+    profile = get_format(format_id)
     command = [str(tools.ytdlp), "--ignore-config", "--no-plugin-dirs", "--no-playlist",
                "--newline", "--no-colors", "--encoding", "utf-8", "--no-simulate",
                "--windows-filenames", "--trim-filenames", "180", "--no-overwrites", "--continue",
@@ -29,9 +33,11 @@ def build_command(tools: Tools, resolved: Resolved, destination: Path) -> list[s
                "--print", "after_move:" + FILE + "%(filepath)j",
                "--ffmpeg-location", str(tools.ffmpeg.parent),
                "--js-runtimes", "deno:" + str(tools.deno),
-               "-P", str(destination), "-o", "%(title).150B [%(id)s].%(ext)s",
-               "-f", "bv*+ba[language^=it]/bv*+ba/b",
-               "-S", "vcodec:h264,acodec:aac,ext:mp4:m4a", "--merge-output-format", "mp4"]
+               "-P", str(destination),
+               "-P", "temp:" + str(destination / ".ytdlp-tmp" / profile.id),
+               "-o", "%(title).140B [%(id)s] [" + profile.id + "].%(ext)s"]
+    italian = parse_qs(urlsplit(resolved.url).query).get("lang") == ["it"]
+    command += profile.options(italian)
     if resolved.referer:
         command += ["--referer", resolved.referer, "--user-agent", USER_AGENT]
     if resolved.title:
@@ -47,7 +53,7 @@ def parse_line(line: str) -> tuple[str, dict]:
         if line.startswith(FILE):
             return "file", {"path": json.loads(line[len(FILE):])}
         if line.startswith(POSTPROCESS):
-            return "postprocess", {"text": "Unione di video e audio…"}
+            return "postprocess", {"text": "Conversione e finalizzazione del file…"}
         if line.startswith(PROGRESS):
             raw = json.loads(line[len(PROGRESS):])
             downloaded = raw.get("downloaded_bytes") or 0
@@ -87,9 +93,10 @@ class DownloadJob:
         self.thread: threading.Thread | None = None
         self.lock = threading.Lock()
 
-    def start(self, url: str, destination: Path) -> None:
+    def start(self, url: str, destination: Path, format_id: str = DEFAULT_FORMAT) -> None:
         validate_url(url)
-        self.thread = threading.Thread(target=self.run, args=(url, destination), daemon=True)
+        get_format(format_id)
+        self.thread = threading.Thread(target=self.run, args=(url, destination, format_id), daemon=True)
         self.thread.start()
 
     def cancel(self) -> None:
@@ -108,8 +115,10 @@ class DownloadJob:
             except OSError:
                 pass
 
-    def run(self, url: str, destination: Path) -> None:
+    def run(self, url: str, destination: Path, format_id: str = DEFAULT_FORMAT) -> None:
         try:
+            check_cancel(self.cancelled)
+            profile = get_format(format_id)
             destination.mkdir(parents=True, exist_ok=True)
             tools = RuntimeManager().ensure(self.cancelled, self.emit)
             self.emit("status", {"text": "Analisi dell'indirizzo…"})
@@ -118,7 +127,7 @@ class DownloadJob:
             with self.lock:
                 check_cancel(self.cancelled)
                 self.process = subprocess.Popen(
-                    build_command(tools, resolved, destination), shell=False,
+                    build_command(tools, resolved, destination, format_id), shell=False,
                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     encoding="utf-8", errors="replace", bufsize=1,
                     creationflags=(subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP) if os.name == "nt" else 0,
@@ -139,6 +148,8 @@ class DownloadJob:
                 raise RuntimeError("\n".join(tail) or f"yt-dlp è terminato con codice {code}.")
             if not result or not Path(result).is_file():
                 raise RuntimeError("yt-dlp è terminato senza indicare un file completato. Consulta i dettagli.")
+            if profile.extension and Path(result).suffix.lower() != "." + profile.extension:
+                raise RuntimeError(f"Il file prodotto non è nel formato {profile.extension.upper()} richiesto.")
             self.emit("done", {"path": result})
         except Cancelled:
             if self.process is not None:

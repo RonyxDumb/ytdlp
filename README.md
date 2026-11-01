@@ -13,7 +13,9 @@ Un'interfaccia in italiano per scaricare un video alla volta con yt-dlp.
 
 Apri le [release](https://github.com/RonyxDumb/ytdlp/releases), scarica **YtDlp-Windows-x64.zip** dalla release `windows-v…`, estrai la cartella e avvia **YtDlp.exe**. Non serve installare Python per usare l'eseguibile.
 
-Incolla l'indirizzo nella barra e premi **Scarica video**. Sotto compaiono progresso, velocità e tempo rimasto. Puoi annullare, scegliere la cartella e aprirla direttamente. Destinazione iniziale: `Download/YtDlp`.
+Incolla l'indirizzo nella barra, scegli **Formato del download** e premi **Scarica video** oppure **Scarica audio**. Sotto compaiono progresso, velocità e tempo rimasto. Puoi annullare, scegliere la cartella e aprirla direttamente. Destinazione iniziale: `Download/YtDlp`.
+
+Su entrambe le piattaforme puoi scegliere **MP4, MKV, WebM, video automatico, MP3, WAV, M4A, FLAC, Opus e OGG Vorbis**. L'app ricorda l'ultima scelta. I formati audio estraggono solo la traccia audio e FFmpeg converte quando necessario; WAV e FLAC non migliorano la qualità della sorgente. Le conversioni video possono richiedere tempo. Il completamento viene mostrato dopo la finalizzazione del file.
 
 Al primo download l'app prepara yt-dlp, FFmpeg e Deno dalle loro release ufficiali, verificando il digest SHA-256. Gli avvii successivi riutilizzano gli strumenti già preparati. Per aggiornare gli estrattori: **Impostazioni → Aggiorna motore yt-dlp e strumenti**.
 
@@ -23,7 +25,7 @@ Il repository `RonyxDumb/ytdlp` è pubblico: **gli aggiornamenti funzionano senz
 
 ## Android
 
-Il progetto Android 1.2 completo è in [`android/`](android/). Apri questa cartella in Android Studio oppure esegui `android/docker_build.bat` con Docker Desktop. L'APK appare in `android/output/YtDlp.apk`. Da terminale: `cd android` e `./gradlew testDebugUnitTest assembleDebug`.
+Il progetto Android 1.3 completo è in [`android/`](android/). Apri questa cartella in Android Studio oppure esegui `android/docker_build.bat` con Docker Desktop. L'APK appare in `android/output/YtDlp.apk`. Da terminale: `cd android` e `./gradlew testDebugUnitTest assembleDebug`.
 
 ## Compilazione automatica
 

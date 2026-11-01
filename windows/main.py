@@ -47,6 +47,16 @@ def main() -> int:
             assert "42.5%" in app.status.get()
             assert float(app.bar["value"]) == 42.5
             assert app.entry.winfo_width() > 250
+            from ytdlp_windows.formats import FORMATS
+            app.format_choice.current(next(i for i, profile in enumerate(FORMATS) if profile.id == "mp3"))
+            app.choose_format()
+            assert app.format_id == "mp3"
+            assert app.download_button.cget("text") == "Scarica audio"
+            app.set_busy(True)
+            assert str(app.format_choice.cget("state")) == "disabled"
+            app.set_busy(False)
+            assert str(app.format_choice.cget("state")) == "readonly"
+            assert app.format_choice.winfo_width() > 250
             app.handle("cancelled", {"text": "Prova annullamento"})
             assert "annullato" in app.status.get()
             root.update()

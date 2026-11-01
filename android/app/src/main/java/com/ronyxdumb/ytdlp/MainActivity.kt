@@ -26,6 +26,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cancel: MaterialButton
     private lateinit var update: MaterialButton
     private lateinit var input: TextInputEditText
+    private lateinit var formatField: TextInputLayout
+    private lateinit var formatChoice: MaterialAutoCompleteTextView
+    private var selectedFormat = DownloadFormat.MP4
     private var updating = false
     private val refresh = object : Runnable {
         override fun run() {
@@ -34,6 +37,7 @@ class MainActivity : AppCompatActivity() {
             progress.visibility = if (DownloadState.busy) View.VISIBLE else View.GONE
             download.isEnabled = !DownloadState.busy && !updating
             update.isEnabled = !DownloadState.busy && !updating
+            formatField.isEnabled = !DownloadState.busy && !updating
             cancel.visibility = if (DownloadState.busy) View.VISIBLE else View.GONE
             handler.postDelayed(this, 400)
         }
@@ -42,6 +46,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
+        selectedFormat = DownloadFormat.saved(savedInstanceState?.getString(DownloadFormat.EXTRA)
+            ?: getSharedPreferences("settings", MODE_PRIVATE).getString(DownloadFormat.EXTRA, null))
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT; window.navigationBarColor = Color.TRANSPARENT
         window.isNavigationBarContrastEnforced = false
@@ -67,7 +73,27 @@ class MainActivity : AppCompatActivity() {
             if (clip != null && clip.itemCount > 0) input.setText(clip.getItemAt(0).coerceToText(this@MainActivity))
         } }
         content.addView(paste)
-        download = MaterialButton(this).apply { text = "Scarica video"; cornerRadius = dp(24); setOnClickListener { startDownload() } }
+        formatField = TextInputLayout(this).apply {
+            hint = "Formato del download"
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            endIconMode = TextInputLayout.END_ICON_DROPDOWN_MENU
+            helperText = selectedFormat.description
+        }
+        formatChoice = MaterialAutoCompleteTextView(formatField.context).apply {
+            inputType = android.text.InputType.TYPE_NULL
+            setSimpleItems(DownloadFormat.entries.map { it.label }.toTypedArray())
+            setText(selectedFormat.label, false)
+            setOnItemClickListener { _, _, position, _ ->
+                selectedFormat = DownloadFormat.entries[position]
+                formatField.helperText = selectedFormat.description
+                download.text = if (selectedFormat.audioOnly) "Scarica audio" else "Scarica video"
+                getSharedPreferences("settings", MODE_PRIVATE).edit()
+                    .putString(DownloadFormat.EXTRA, selectedFormat.id).apply()
+            }
+        }
+        formatField.addView(formatChoice)
+        content.addView(formatField, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12); bottomMargin = dp(12) })
+        download = MaterialButton(this).apply { text = if (selectedFormat.audioOnly) "Scarica audio" else "Scarica video"; cornerRadius = dp(24); setOnClickListener { startDownload() } }
         content.addView(download, LinearLayout.LayoutParams(-1, dp(56)))
         content.addView(text("Cartella: Download/YtDlp/", 14f))
         card.addView(content); root.addView(card, LinearLayout.LayoutParams(-1, -2))
@@ -86,13 +112,19 @@ class MainActivity : AppCompatActivity() {
         input.setText(savedInstanceState?.getString("url") ?: intent.getStringExtra(Intent.EXTRA_TEXT) ?: "")
     }
     private fun startDownload() {
+        if (DownloadState.busy || updating) return
         val url = input.text.toString().trim()
         val uri = Uri.parse(url)
         if (uri.scheme !in listOf("https", "http") || uri.host.isNullOrBlank() || url.any { it.isWhitespace() }) { input.error = "Inserisci un link HTTP o HTTPS valido"; return }
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 10)
-        startForegroundService(Intent(this, DownloadService::class.java).putExtra("url", url))
+        startForegroundService(Intent(this, DownloadService::class.java).putExtra("url", url)
+            .putExtra(DownloadFormat.EXTRA, selectedFormat.id))
     }
-    override fun onSaveInstanceState(outState: Bundle) { outState.putString("url", input.text.toString()); super.onSaveInstanceState(outState) }
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("url", input.text.toString())
+        outState.putString(DownloadFormat.EXTRA, selectedFormat.id)
+        super.onSaveInstanceState(outState)
+    }
     override fun onResume() { super.onResume(); handler.post(refresh) }
     override fun onPause() { handler.removeCallbacks(refresh); super.onPause() }
 }

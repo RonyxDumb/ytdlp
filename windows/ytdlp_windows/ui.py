@@ -12,6 +12,7 @@ from . import VERSION
 from .config import default_downloads, load_settings, save_settings
 from .credentials import read_token, save_token
 from .download import DownloadJob
+from .formats import DEFAULT_FORMAT, FORMATS, get_format
 from .github import Cancelled, GitHubClient, Release
 from .resolver import validate_url
 from .runtime import RuntimeManager
@@ -58,6 +59,10 @@ class App:
             except OSError:
                 pass
         self.url = tk.StringVar()
+        self.format_id = self.settings.get("format", DEFAULT_FORMAT)
+        if self.format_id not in {profile.id for profile in FORMATS}:
+            self.format_id = DEFAULT_FORMAT
+        self.format_hint = tk.StringVar(value=get_format(self.format_id).description)
         self.folder = tk.StringVar(value=self.settings.get("destination") or str(default_downloads()))
         self.status = tk.StringVar(value="Pronto per un nuovo download")
         self.detail = tk.StringVar(value="Il progresso apparirà qui")
@@ -71,8 +76,8 @@ class App:
     def build(self):
         root = self.root
         root.title("YtDlp")
-        root.geometry("820x650")
-        root.minsize(700, 600)
+        root.geometry("820x760")
+        root.minsize(700, 730)
         root.configure(bg=BG)
         root.option_add("*Font", "{Segoe UI} 10")
         style = ttk.Style(root)
@@ -90,6 +95,13 @@ class App:
                   foreground=[("disabled", "#8493ad")])
         style.configure("TEntry", fieldbackground=FIELD, foreground=TEXT, insertcolor=TEXT,
                         borderwidth=0, padding=12)
+        style.configure("TCombobox", fieldbackground=FIELD, foreground=TEXT, padding=9)
+        style.map("TCombobox", fieldbackground=[("readonly", FIELD)],
+                  foreground=[("readonly", TEXT), ("disabled", MUTED)])
+        root.option_add("*TCombobox*Listbox.background", FIELD)
+        root.option_add("*TCombobox*Listbox.foreground", TEXT)
+        root.option_add("*TCombobox*Listbox.selectBackground", ACCENT)
+        root.option_add("*TCombobox*Listbox.selectForeground", BG)
         style.configure("Horizontal.TProgressbar", background=ACCENT, troughcolor=FIELD,
                         borderwidth=0, lightcolor=ACCENT, darkcolor=ACCENT, thickness=9)
         outer = ttk.Frame(root, padding=(30, 26))
@@ -111,6 +123,15 @@ class App:
         self.entry.bind("<Return>", lambda _: self.start_download())
         self.paste_button = ttk.Button(row, text="Incolla", command=self.paste)
         self.paste_button.pack(side="left", padx=(8, 0))
+        tk.Label(card, text="FORMATO DEL DOWNLOAD", bg=CARD, fg=MUTED,
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(18, 8))
+        self.format_choice = ttk.Combobox(card, values=[profile.label for profile in FORMATS],
+                                         state="readonly", height=len(FORMATS))
+        self.format_choice.current(next(i for i, profile in enumerate(FORMATS) if profile.id == self.format_id))
+        self.format_choice.bind("<<ComboboxSelected>>", self.choose_format)
+        self.format_choice.pack(fill="x")
+        tk.Label(card, textvariable=self.format_hint, bg=CARD, fg=MUTED, anchor="w",
+                 wraplength=600, justify="left").pack(fill="x", pady=(8, 0))
         progress_header = ttk.Frame(card, style="Card.TFrame")
         progress_header.pack(fill="x", pady=(23, 10))
         tk.Label(progress_header, textvariable=self.status, bg=CARD, fg=TEXT,
@@ -121,7 +142,8 @@ class App:
                  wraplength=600, justify="left").pack(fill="x", pady=(10, 17))
         actions = ttk.Frame(card, style="Card.TFrame")
         actions.pack(fill="x")
-        self.download_button = ttk.Button(actions, text="Scarica video", style="Primary.TButton", command=self.start_download)
+        self.download_button = ttk.Button(actions, text="Scarica audio" if get_format(self.format_id).audio else "Scarica video",
+                                          style="Primary.TButton", command=self.start_download)
         self.download_button.pack(side="left")
         self.cancel_button = ttk.Button(actions, text="Annulla", command=self.cancel, state="disabled")
         self.cancel_button.pack(side="left", padx=8)
@@ -176,6 +198,7 @@ class App:
         for button in (self.download_button, self.choose_button, self.paste_button, self.settings_button):
             button.configure(state="disabled" if busy else "normal")
         self.entry.configure(state="disabled" if busy else "normal")
+        self.format_choice.configure(state="disabled" if busy else "readonly")
         self.check_button.configure(state="disabled" if busy or self.checking else "normal")
         self.update_button.configure(state="disabled" if busy else "normal")
         self.cancel_button.configure(state="normal" if busy and self.job else "disabled")
@@ -193,6 +216,21 @@ class App:
             self.entry.focus_set()
         except tk.TclError:
             self.status.set("Gli appunti non contengono un indirizzo.")
+
+    def choose_format(self, _event=None):
+        index = self.format_choice.current()
+        if self.busy or index < 0:
+            return
+        profile = FORMATS[index]
+        self.format_id = profile.id
+        self.format_hint.set(profile.description)
+        self.download_button.configure(text="Scarica audio" if profile.audio else "Scarica video")
+        self.settings["format"] = profile.id
+        if not self.smoke:
+            try:
+                save_settings(self.settings)
+            except OSError as error:
+                self.append_log(f"Impossibile ricordare il formato: {error}")
 
     def choose_folder(self):
         folder = filedialog.askdirectory(parent=self.root, title="Cartella dei download", initialdir=self.folder.get())
@@ -225,10 +263,10 @@ class App:
         self.output = ""
         self.job = DownloadJob(self.emit)
         self.set_busy(True)
-        self.status.set("Preparazione del download…")
+        self.status.set(f"Preparazione · {get_format(self.format_id).label}")
         self.detail.set("Al primo avvio vengono scaricati gli strumenti ufficiali.")
         self.set_progress()
-        self.job.start(url, Path(self.folder.get()))
+        self.job.start(url, Path(self.folder.get()), self.format_id)
 
     def cancel(self):
         if self.job:
