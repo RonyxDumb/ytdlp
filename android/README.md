@@ -23,7 +23,7 @@ Il motore scrive temporaneamente nella memoria privata dell'app e copia poi il r
 
 ## Compila su Windows
 1. Installa e avvia Docker Desktop con container Linux.
-2. Clona il repository con `git clone https://github.com/RonyxDumb/ytdlp-android.git`, oppure scarica ed estrai lo ZIP dei sorgenti.
+2. Clona il repository con `git clone https://github.com/RonyxDumb/ytdlp.git`, oppure scarica ed estrai lo ZIP dei sorgenti.
 3. Entra nella cartella `android` e fai doppio clic su `docker_build.bat`.
 4. Attendi: la prima build scarica SDK, Gradle e dipendenze; serve Internet.
 5. L'APK viene creato in `output/YtDlp.apk` e la cartella si apre automaticamente.

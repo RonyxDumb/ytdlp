@@ -16,7 +16,9 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from ytdlp_windows.download import DownloadJob
+from ytdlp_windows.github import GitHubClient
 from ytdlp_windows.runtime import RuntimeManager, Tools
+from ytdlp_windows.updater import extract_application
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -26,6 +28,17 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 @unittest.skipUnless(os.name == "nt" and os.environ.get("YTDLP_INTEGRATION") == "1", "Opt-in real Windows download")
 class IntegrationTests(unittest.TestCase):
+    def test_published_update_can_be_found_and_verified(self):
+        client = GitHubClient()
+        release = client.check_update(current="0.0.0")
+        self.assertIsNotNone(release)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = client.download(release.asset, root / "update.zip")
+            executable = extract_application(archive, root)
+            with executable.open("rb") as source:
+                self.assertEqual(source.read(2), b"MZ")
+
     def test_official_executable_downloads_local_media(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

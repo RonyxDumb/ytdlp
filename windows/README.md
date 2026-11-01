@@ -1,10 +1,10 @@
 # YtDlp Windows
 
-**By Francesco Pio Pipino** · Versione 1.0.0 · Windows 10/11 x64
+**By Francesco Pio Pipino** · Versione 1.0.1 · Windows 10/11 x64
 
 ## Uso
 
-1. Scarica `YtDlp-Windows-x64.zip` dalle release GitHub di `RonyxDumb/ytdlp-android`.
+1. Scarica `YtDlp-Windows-x64.zip` dalle release GitHub di `RonyxDumb/ytdlp`.
 2. Estrai lo ZIP in una cartella scrivibile, per esempio sul Desktop. Avvia `YtDlp.exe`.
 3. Incolla un indirizzo HTTP/HTTPS e premi **Scarica video**, oppure Invio.
 4. Sotto l'indirizzo trovi la barra, la velocità e il tempo stimato. **Annulla** interrompe anche i processi di download e unione.
@@ -30,7 +30,7 @@ La verifica GitHub avviene all'apertura senza bloccare l'interfaccia e con il pu
 
 Quando è disponibile una nuova versione appare **Aggiorna app**. Dopo la conferma, l'app scarica e verifica lo ZIP, prepara il nuovo eseguibile, attende la chiusura del processo attuale e lo sostituisce. `YtDlp.exe.previous.exe` conserva il file precedente. Un errore durante la sostituzione ripristina la copia precedente; i dettagli sono in `%LOCALAPPDATA%/YtDlp/update-error.txt`. La cartella dell'app deve essere scrivibile.
 
-Il repository è privato: in **Impostazioni** salva un fine-grained token GitHub con accesso solo a `RonyxDumb/ytdlp-android` e `Contents: Read-only`. Serve per leggere release e allegati. L'app usa l'API per gli allegati privati e non inoltra il token ai server CDN. Il token è conservato come credenziale Windows, non nel file delle preferenze. Per rimuoverlo, svuota il campo e salva. I download pubblici non richiedono questo token.
+Il repository `RonyxDumb/ytdlp` è pubblico e non serve alcun token per gli aggiornamenti. Un token facoltativo può essere inserito in **Impostazioni** per un eventuale repository privato o per aumentare il limite delle richieste API: usa un fine-grained token con accesso solo a questo repository e `Contents: Read-only`. L'app usa l'API anche per gli allegati privati e non inoltra il token ai server CDN. Il token è conservato come credenziale Windows, non nel file delle preferenze. Per rimuoverlo, svuota il campo e salva.
 
 ## Compila dal codice
 

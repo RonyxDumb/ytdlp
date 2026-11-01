@@ -300,9 +300,10 @@ class App:
         frame = ttk.Frame(window, padding=24)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Aggiornamenti da GitHub", font=("Segoe UI", 15, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Il repository è privato. Usa un fine-grained token con accesso a\n"
-                  "RonyxDumb/ytdlp-android e permesso Contents: Read-only.\n"
-                  "Il token viene salvato nel Gestore credenziali di Windows.",
+        ttk.Label(frame, text="Le release pubbliche vengono verificate senza token.\n"
+                  "Token facoltativo per accesso privato o limiti API: repository\n"
+                  "RonyxDumb/ytdlp, Contents: Read-only. Viene salvato\n"
+                  "nel Gestore credenziali di Windows.",
                   style="Muted.TLabel", justify="left").pack(anchor="w", pady=(10, 16))
         token = tk.StringVar(value=self.token)
         ttk.Entry(frame, textvariable=token, show="•").pack(fill="x")

@@ -11,7 +11,7 @@ Un'interfaccia in italiano per scaricare un video alla volta con yt-dlp.
 
 ## Windows
 
-Apri le [release](https://github.com/RonyxDumb/ytdlp-android/releases), scarica **YtDlp-Windows-x64.zip** dalla release `windows-v…`, estrai la cartella e avvia **YtDlp.exe**. Non serve installare Python per usare l'eseguibile.
+Apri le [release](https://github.com/RonyxDumb/ytdlp/releases), scarica **YtDlp-Windows-x64.zip** dalla release `windows-v…`, estrai la cartella e avvia **YtDlp.exe**. Non serve installare Python per usare l'eseguibile.
 
 Incolla l'indirizzo nella barra e premi **Scarica video**. Sotto compaiono progresso, velocità e tempo rimasto. Puoi annullare, scegliere la cartella e aprirla direttamente. Destinazione iniziale: `Download/YtDlp`.
 
@@ -19,7 +19,7 @@ Al primo download l'app prepara yt-dlp, FFmpeg e Deno dalle loro release ufficia
 
 La verifica delle nuove versioni dell'app parte all'avvio ed è disponibile anche con **Verifica aggiornamenti**. Una nuova release Windows mostra **Aggiorna app**: scarica il pacchetto, verifica SHA-256 e, dopo la tua scelta, sostituisce l'eseguibile e riapre l'app. Conserva una copia della versione precedente e mantiene impostazioni e download.
 
-**Repository privato:** per vedere e scaricare gli aggiornamenti inserisci in **Impostazioni** un fine-grained token GitHub limitato a questo repository, con `Contents: Read-only`. Il token resta nel Gestore credenziali di Windows. Non viene inserito nei sorgenti, negli eseguibili o nelle impostazioni JSON. Se il repository diventa pubblico, la verifica funziona senza token.
+Il repository `RonyxDumb/ytdlp` è pubblico: **gli aggiornamenti funzionano senza token**. Se in futuro diventa privato, puoi inserire in **Impostazioni** un fine-grained token GitHub limitato a questo repository, con `Contents: Read-only`. Il token resta nel Gestore credenziali di Windows e non viene inserito nei sorgenti, negli eseguibili o nelle impostazioni JSON.
 
 ## Android
 
