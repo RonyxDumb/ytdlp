@@ -153,10 +153,16 @@ class FormatIntegrationTests(unittest.TestCase):
 
     def test_separate_h264_and_aac_tracks_can_be_converted_to_webm(self):
         source = self.root / "streams.mpd"
+        # Relative paths keep Windows drive names out of the served manifest.
+        # Explicit segment URLs also avoid FFmpeg template-default differences.
         subprocess.run([str(self.tools.ffmpeg), "-hide_banner", "-loglevel", "error", "-y",
-                        "-i", str(self.root / "sample.mp4"), "-map", "0", "-c", "copy",
-                        "-f", "dash", str(source)], check=True, timeout=60)
-        result, info = self.download("streams.mpd", self.root / "dash-converted", "webm")
+                        "-i", "sample.mp4", "-map", "0", "-c", "copy",
+                        "-f", "dash", "-use_template", "0", "-use_timeline", "0", source.name],
+                       cwd=self.root, check=True, timeout=60)
+        try:
+            result, info = self.download("streams.mpd", self.root / "dash-converted", "webm")
+        except AssertionError as error:
+            self.fail(f"{error}\nManifest: {source.read_text()}\nFiles: {sorted(p.name for p in self.root.iterdir())}")
         self.assertEqual(result.suffix, ".webm")
         self.assertTrue(any(s["codec_type"] == "video" for s in info["streams"]))
         self.assertTrue(any(s["codec_type"] == "audio" for s in info["streams"]))
