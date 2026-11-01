@@ -37,6 +37,7 @@ jobs:
       - name: Unit tests and real local download with official yt-dlp
         env:
           YTDLP_INTEGRATION: '1'
+          YTDLP_TEST_GITHUB_TOKEN: ${{ github.token }}
         run: |
           python -m unittest discover -s tests -v
           if ($LASTEXITCODE -ne 0) { throw 'Test Windows falliti' }

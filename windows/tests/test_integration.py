@@ -25,6 +25,18 @@ from ytdlp_windows.runtime import RuntimeManager, Tools
 from ytdlp_windows.updater import extract_application
 
 
+def integration_client():
+    # The runner's shared IP can exhaust anonymous GitHub API limits. Only tests
+    # use this short-lived Actions token; it is never bundled with the app.
+    return GitHubClient(os.environ.get("YTDLP_TEST_GITHUB_TOKEN", ""))
+
+
+def official_tools(root):
+    manager = RuntimeManager(root)
+    manager.client = integration_client()
+    return manager.ensure(threading.Event(), lambda *_: None)
+
+
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *_):
         pass
@@ -33,7 +45,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
 @unittest.skipUnless(os.name == "nt" and os.environ.get("YTDLP_INTEGRATION") == "1", "Opt-in real Windows download")
 class IntegrationTests(unittest.TestCase):
     def test_published_update_can_be_found_and_verified(self):
-        client = GitHubClient()
+        client = integration_client()
         release = client.check_update(current="0.0.0")
         self.assertIsNotNone(release)
         with tempfile.TemporaryDirectory() as directory:
@@ -54,7 +66,7 @@ class IntegrationTests(unittest.TestCase):
             thread.start()
             try:
                 events = []
-                tools = RuntimeManager(root / "tools").ensure(threading.Event(), lambda *_: None)
+                tools = official_tools(root / "tools")
                 job = DownloadJob(lambda *event: events.append(event))
                 with patch("ytdlp_windows.download.RuntimeManager.ensure", return_value=tools):
                     job.run(f"http://127.0.0.1:{server.server_port}/sample.mp4", root / "downloads")
@@ -78,7 +90,7 @@ class FormatIntegrationTests(unittest.TestCase):
         cls.root = Path(cls.directory.name)
         cls.media = base64.b64decode(Path(__file__).with_name("fixture.mp4.b64").read_text())
         (cls.root / "sample.mp4").write_bytes(cls.media)
-        cls.tools = (RuntimeManager(cls.root / "tools").ensure(threading.Event(), lambda *_: None)
+        cls.tools = (official_tools(cls.root / "tools")
                      if os.name == "nt" else Tools(Path(shutil.which("yt-dlp")),
                                                   Path(shutil.which("ffmpeg")), Path("deno")))
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=cls.root))
